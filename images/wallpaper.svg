@@ -1,32 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FFF6FB"/>
-      <stop offset="0.5" stop-color="#F3FAFF"/>
-      <stop offset="1" stop-color="#F7FAF1"/>
+      <stop offset="0" stop-color="#FFF8F0"/>
+      <stop offset="0.5" stop-color="#FFF1E4"/>
+      <stop offset="1" stop-color="#FFF6E9"/>
     </linearGradient>
     <g id="star">
       <path d="M0,-10 L2.4,-2.4 L10,0 L2.4,2.4 L0,10 L-2.4,2.4 L-10,0 L-2.4,-2.4 Z"/>
     </g>
   </defs>
   <rect width="1600" height="1000" fill="url(#bg)"/>
-  <circle cx="230" cy="210" r="390" fill="#FFD9E8" opacity="0.5"/>
-  <circle cx="1390" cy="170" r="330" fill="#CDEFFF" opacity="0.45"/>
-  <circle cx="1300" cy="860" r="430" fill="#DDF3CD" opacity="0.38"/>
-  <circle cx="290" cy="910" r="390" fill="#EEDFFF" opacity="0.36"/>
-  <use href="#star" x="420" y="150" fill="#FF9EC7" opacity="0.65" transform="translate(420,150) scale(1.1) translate(-420,-150)"/>
-  <use href="#star" x="880" y="120" fill="#8ED8FF" opacity="0.6"/>
-  <use href="#star" x="1220" y="420" fill="#FFD66B" opacity="0.6" transform="translate(1220,420) scale(1.3) translate(-1220,-420)"/>
-  <use href="#star" x="620" y="520" fill="#BFA8FF" opacity="0.5"/>
-  <use href="#star" x="180" y="620" fill="#9BE7C4" opacity="0.55" transform="translate(180,620) scale(0.9) translate(-180,-620)"/>
-  <use href="#star" x="1460" y="640" fill="#FF9EC7" opacity="0.55"/>
-  <use href="#star" x="760" y="820" fill="#8ED8FF" opacity="0.5" transform="translate(760,820) scale(1.2) translate(-760,-820)"/>
-  <use href="#star" x="1080" y="900" fill="#FFD66B" opacity="0.5"/>
-  <use href="#star" x="520" y="300" fill="#FFB3D1" opacity="0.45" transform="translate(520,300) scale(0.8) translate(-520,-300)"/>
-  <use href="#star" x="980" y="640" fill="#9BE7C4" opacity="0.45" transform="translate(980,640) scale(0.85) translate(-980,-640)"/>
-  <circle cx="700" cy="180" r="3" fill="#FFC2DD" opacity="0.7"/>
-  <circle cx="1150" cy="760" r="2.5" fill="#A9DDFF" opacity="0.7"/>
-  <circle cx="400" cy="760" r="2.5" fill="#CDB4FF" opacity="0.65"/>
+  <circle cx="230" cy="210" r="390" fill="#FFD9B0" opacity="0.5"/>
+  <circle cx="1390" cy="170" r="330" fill="#FFC49E" opacity="0.4"/>
+  <circle cx="1300" cy="860" r="430" fill="#FFE7B8" opacity="0.42"/>
+  <circle cx="290" cy="910" r="390" fill="#F7D3C4" opacity="0.35"/>
+  <use href="#star" x="420" y="150" fill="#FFB066" opacity="0.6" transform="translate(420,150) scale(1.1) translate(-420,-150)"/>
+  <use href="#star" x="880" y="120" fill="#FFD68A" opacity="0.6"/>
+  <use href="#star" x="1220" y="420" fill="#FF9E7A" opacity="0.55" transform="translate(1220,420) scale(1.3) translate(-1220,-420)"/>
+  <use href="#star" x="620" y="520" fill="#F7A8C4" opacity="0.45"/>
+  <use href="#star" x="180" y="620" fill="#FFD68A" opacity="0.55" transform="translate(180,620) scale(0.9) translate(-180,-620)"/>
+  <use href="#star" x="1460" y="640" fill="#FFB066" opacity="0.55"/>
+  <use href="#star" x="760" y="820" fill="#FF9E7A" opacity="0.5" transform="translate(760,820) scale(1.2) translate(-760,-820)"/>
+  <use href="#star" x="1080" y="900" fill="#FFD68A" opacity="0.5"/>
+  <use href="#star" x="520" y="300" fill="#F7A8C4" opacity="0.4" transform="translate(520,300) scale(0.8) translate(-520,-300)"/>
+  <use href="#star" x="980" y="640" fill="#FFB066" opacity="0.45" transform="translate(980,640) scale(0.85) translate(-980,-640)"/>
+  <circle cx="700" cy="180" r="3" fill="#FFC9A0" opacity="0.7"/>
+  <circle cx="1150" cy="760" r="2.5" fill="#FFD68A" opacity="0.7"/>
+  <circle cx="400" cy="760" r="2.5" fill="#FF9E7A" opacity="0.65"/>
   <circle cx="1340" cy="330" r="3" fill="#FFE59E" opacity="0.7"/>
-  <circle cx="80" cy="380" r="2" fill="#A9DDFF" opacity="0.6"/>
+  <circle cx="80" cy="380" r="2" fill="#F7A8C4" opacity="0.6"/>
 </svg>

@@ -147,9 +147,83 @@ body::before {
 
 /* 卡片改为半透明，让壁纸透出来 */
 :root {
-  --card-bg: rgba(255, 255, 255, 0.86);
+  --card-bg: rgba(255, 251, 245, 0.9);
 }
 
 [data-theme="dark"] {
-  --card-bg: rgba(24, 24, 28, 0.9);
+  --card-bg: rgba(26, 20, 32, 0.9);
+}
+
+/* ============================================================
+   黄昏金橘主题（配色 + 布局细节）
+   ============================================================ */
+:root {
+  --font-color: #4a3730;
+  --btn-bg: #e2703a;
+  --btn-hover-color: #c8571f;
+  --scrollbar-color: #e89a5c;
+  --default-bg-color: #e2703a;
+  --text-bg-hover: rgba(226, 112, 58, 0.6);
+  --blockquote-bg: rgba(255, 158, 94, 0.12);
+  --blockquote-color: #8a5a3c;
+  --hr-before-color: #ffc48a;
+  --mark-bg: rgba(15, 8, 20, 0.18);
+  --tab-button-active-bg: #fffaf3;
+}
+
+[data-theme="dark"] {
+  --text-bg-hover: rgba(226, 112, 58, 0.5);
+}
+
+/* 横幅兜底底色，避免加载瞬间闪蓝 */
+#page-header {
+  background-color: #2b2440;
+}
+
+/* 标题在夕阳上更清晰 */
+#page-header #site-title {
+  text-shadow: 0 2px 18px rgba(30, 12, 20, 0.55);
+}
+
+#page-header #site-subtitle {
+  text-shadow: 0 1px 12px rgba(30, 12, 20, 0.5);
+}
+
+/* 滚动后的导航条：暖色磨砂玻璃 */
+#page-header.nav-fixed #nav {
+  background: rgba(255, 247, 236, 0.82) !important;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+#page-header.nav-fixed #nav a:hover,
+#page-header.nav-fixed #nav #blog-info:hover {
+  color: #d9602b !important;
+}
+
+#nav .site-page:not(.child):after {
+  background-color: #ffc48a !important;
+}
+
+/* 页脚：落日渐变 */
+#footer {
+  background: linear-gradient(135deg, #2b1b33 0%, #7b2d3a 48%, #d96144 100%) !important;
+}
+
+#footer > * {
+  color: rgba(255, 236, 214, 0.9);
+}
+
+#footer a:hover {
+  color: #ffd9a8 !important;
+}
+
+/* 正文链接暖色 */
+#article-container a {
+  color: #c8571f;
+  border-bottom-color: rgba(200, 87, 31, 0.35);
+}
+
+#article-container a:hover {
+  color: #a84414;
 }

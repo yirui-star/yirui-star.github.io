@@ -22,7 +22,7 @@
     var W = 0, H = 0;
     var count = window.innerWidth < 768 ? 14 : 26;
     var petals = [];
-    var PETAL_COLORS = ['255, 61, 127', '255, 111, 165', '255, 138, 92', '255, 201, 60', '176, 107, 255', '255, 94, 156'];
+    var PETAL_COLORS = ['255, 150, 70', '255, 190, 92', '244, 106, 94', '255, 214, 130', '232, 120, 168', '255, 130, 90'];
 
     function resize() {
       W = window.innerWidth;
@@ -38,14 +38,14 @@
       return {
         x: Math.random() * W,
         y: fromTop ? -30 - Math.random() * 80 : Math.random() * H,
-        size: 7 + Math.random() * 7,
+        size: 8 + Math.random() * 8,
         vy: 0.36 + Math.random() * 0.6,
         vx: -0.2 + Math.random() * 0.4,
         sway: Math.random() * Math.PI * 2,
         swaySpeed: 0.008 + Math.random() * 0.018,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: -0.012 + Math.random() * 0.024,
-        alpha: 0.72 + Math.random() * 0.26,
+        alpha: 0.8 + Math.random() * 0.18,
         color: PETAL_COLORS[(Math.random() * PETAL_COLORS.length) | 0]
       };
     }
@@ -100,7 +100,7 @@
     var ctx = canvas.getContext('2d');
     var W = 0, H = 0;
     var meteors = [];
-    var METEOR_COLORS = ['255, 224, 130', '127, 227, 255', '217, 166, 255', '255, 158, 199'];
+    var METEOR_COLORS = ['255, 214, 130', '255, 160, 90', '255, 130, 150', '255, 190, 120'];
 
     function resize() {
       W = window.innerWidth;
