@@ -117,25 +117,26 @@
 body::before {
   content: "";
   position: fixed;
-  inset: -3%;
+  inset: -15%;
   z-index: -1;
   pointer-events: none;
   background: url("/images/wallpaper.svg") center / cover no-repeat;
-  transform: translate3d(0, 0, 0) scale(1.02);
-  animation: wallpaper-float 46s ease-in-out infinite alternate;
+  transform: translate3d(0, var(--wall-y, 0px), 0) scale(1.08);
   will-change: transform;
+  animation: wallpaper-breathe 16s ease-in-out infinite alternate;
 }
 
 [data-theme="dark"] body::before {
   background-image: url("/images/wallpaper-dark.svg");
 }
 
-@keyframes wallpaper-float {
+/* 呼吸感：独立于滚动视差，缓慢上下浮动 */
+@keyframes wallpaper-breathe {
   from {
-    transform: translate3d(0, 0, 0) scale(1.02);
+    translate: 0 0;
   }
   to {
-    transform: translate3d(-2%, -1.4%, 0) scale(1.07);
+    translate: 0 -18px;
   }
 }
 
@@ -226,4 +227,20 @@ body::before {
 
 #article-container a:hover {
   color: #a84414;
+}
+
+/* ============================================================
+   顶部阅读进度条
+   ============================================================ */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  z-index: 99;
+  pointer-events: none;
+  background: linear-gradient(90deg, #ffc46b, #e2703a 60%, #c85a3e);
+  box-shadow: 0 0 8px rgba(226, 112, 58, 0.55);
+  border-radius: 0 2px 2px 0;
 }

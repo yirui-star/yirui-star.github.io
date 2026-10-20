@@ -218,10 +218,64 @@
     document.body.appendChild(btn);
   }
 
+  /* ---------------- 背景随滚动视差 ---------------- */
+  function initWallpaperParallax() {
+    if (reduceMotion) return;
+    var root = document.documentElement;
+    var target = 0;
+    var current = 0;
+    var rafId = null;
+
+    function onScroll() {
+      var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+      target = -Math.min(y * 0.16, 80);
+      if (rafId === null) rafId = requestAnimationFrame(loop);
+    }
+
+    function loop() {
+      var diff = target - current;
+      current += diff * 0.1;
+      if (Math.abs(diff) > 0.15) {
+        root.style.setProperty('--wall-y', current.toFixed(2) + 'px');
+        rafId = requestAnimationFrame(loop);
+      } else {
+        current = target;
+        root.style.setProperty('--wall-y', target.toFixed(2) + 'px');
+        rafId = null;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    onScroll();
+  }
+
+  /* ---------------- 顶部阅读进度条 ---------------- */
+  function initScrollProgress() {
+    if (document.getElementById('scroll-progress')) return;
+    var bar = document.createElement('div');
+    bar.id = 'scroll-progress';
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+
+    function update() {
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - window.innerHeight;
+      var p = max > 0 ? (window.pageYOffset / max) * 100 : 0;
+      bar.style.width = p.toFixed(2) + '%';
+    }
+
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  }
+
   function boot() {
     initPetals();
     initMeteors();
     initLike();
+    initWallpaperParallax();
+    initScrollProgress();
   }
 
   if (document.readyState === 'loading') {
