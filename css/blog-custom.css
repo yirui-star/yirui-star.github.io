@@ -244,3 +244,299 @@ body::before {
   box-shadow: 0 0 8px rgba(226, 112, 58, 0.55);
   border-radius: 0 2px 2px 0;
 }
+
+/* ============================================================
+   交互打磨：滚动入场 / 悬停反馈 / 点击水波纹
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 1. 滚动入场（只有 JS 可用时才隐藏元素，避免无脚本时内容消失） */
+html.reveal-ready .reveal-item {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+html.reveal-ready .reveal-item.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* 2. 卡片悬停：上浮 + 封面微微放大 */
+.recent-post-item {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
+}
+
+.recent-post-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(122, 60, 30, 0.18);
+}
+
+.recent-post-item .post_cover img,
+.recent-post-item .post_bg img {
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.recent-post-item:hover .post_cover img,
+.recent-post-item:hover .post_bg img {
+  transform: scale(1.06);
+}
+
+/* 3. 图标按钮：悬停放大、按下回弹 */
+#rightside > div > button,
+#rightside > div > a {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.25s ease;
+}
+
+#rightside > div > button:hover,
+#rightside > div > a:hover {
+  transform: scale(1.12);
+}
+
+#rightside > div > button:active,
+#rightside > div > a:active {
+  transform: scale(0.9);
+}
+
+#nav .site-page i {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#nav .site-page:hover i {
+  transform: translateY(-2px) scale(1.18);
+}
+
+/* 4. 点击水波纹（触屏反馈） */
+.ripple-host {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 0.9;
+  pointer-events: none;
+  animation: ripple-expand 0.65s ease-out forwards;
+}
+
+.recent-post-item .ripple {
+  background: rgba(226, 112, 58, 0.16);
+}
+
+#rightside .ripple {
+  background: rgba(226, 112, 58, 0.16);
+}
+
+@keyframes ripple-expand {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* 5. 头像悬停：轻微放大 + 光晕 */
+#aside-content .card-info .avatar-img img {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+}
+
+#aside-content .card-info .avatar-img img:hover {
+  transform: scale(1.06) rotate(-2deg);
+  box-shadow: 0 0 0 6px rgba(226, 112, 58, 0.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html.reveal-ready .reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   侧栏细节反馈：标签 / 最新文章 / 标题图标
+   ============================================================ */
+.card-tag-cloud a {
+  border-radius: 7px;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.25s ease, color 0.25s ease;
+}
+
+.card-tag-cloud a:hover {
+  transform: translateY(-3px) scale(1.08);
+  background: rgba(226, 112, 58, 0.13);
+  color: #c8571f !important;
+}
+
+.aside-list .aside-list-item {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
+}
+
+.aside-list .aside-list-item:hover {
+  transform: translateX(4px);
+  box-shadow: inset 3px 0 0 rgba(226, 112, 58, 0.9);
+}
+
+.aside-list .aside-list-item .thumbnail {
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.aside-list .aside-list-item .thumbnail img {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.aside-list .aside-list-item:hover .thumbnail img {
+  transform: scale(1.1);
+}
+
+.aside-list .aside-list-item .title {
+  transition: color 0.25s ease;
+}
+
+.aside-list .aside-list-item:hover .title {
+  color: #c8571f !important;
+}
+
+/* 卡片标题旁的图标：悬停轻摆 */
+.card-widget .item-headline i {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-widget:hover .item-headline i {
+  transform: rotate(-8deg) scale(1.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-tag-cloud a,
+  .aside-list .aside-list-item,
+  .aside-list .aside-list-item .thumbnail img,
+  .card-widget .item-headline i {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   页脚：落叶堆 + 微风
+   ============================================================ */
+#footer {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 78px;
+}
+
+#footer > *:not(#leaf-pile) {
+  position: relative;
+  z-index: 1;
+}
+
+#leaf-pile {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 150px;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+#leaf-pile svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#leaf-pile .pile-leaf {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pile-leaf-sway 4s ease-in-out infinite alternate;
+}
+
+#leaf-pile .pile-leaf.lift {
+  animation: pile-leaf-lift 7s ease-in-out infinite;
+}
+
+@keyframes pile-leaf-sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg) translateY(-2px);
+  }
+}
+
+@keyframes pile-leaf-lift {
+  0%,
+  100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+  35% {
+    transform: rotate(5deg) translateY(-12px);
+  }
+  70% {
+    transform: rotate(-4deg) translateY(-3px);
+  }
+}
+
+/* 微风吹过的叶子 */
+.breeze-leaf {
+  position: absolute;
+  left: -40px;
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  animation: breeze-fly 12s linear infinite;
+}
+
+.breeze-leaf svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes breeze-fly {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate3d(50vw, -34px, 0) rotate(150deg);
+    opacity: 1;
+  }
+  92% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(103vw, 6px, 0) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #leaf-pile .pile-leaf,
+  #leaf-pile .pile-leaf.lift,
+  .breeze-leaf {
+    animation: none;
+  }
+
+  .breeze-leaf {
+    display: none;
+  }
+}
