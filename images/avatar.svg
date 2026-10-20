@@ -7,5 +7,6 @@
     </linearGradient>
   </defs>
   <circle cx="100" cy="100" r="100" fill="url(#g)"/>
-  <text x="100" y="115" text-anchor="middle" font-family="Microsoft YaHei, sans-serif" font-size="76" font-weight="600" fill="#ffffff">睿</text>
+  <text x="86" y="124" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="96" font-weight="600" fill="#ffffff">R</text>
+  <path d="M148 52 L151.4 61 L160 64.4 L151.4 67.8 L148 76.8 L144.6 67.8 L136 64.4 L144.6 61 Z" fill="#ffffff" opacity="0.95"/>
 </svg>
