@@ -110,3 +110,46 @@
     font-size: 13px;
   }
 }
+
+/* ============================================================
+   全站壁纸背景（带缓慢漂浮动画）
+   ============================================================ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -3%;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/images/wallpaper.svg") center / cover no-repeat;
+  transform: translate3d(0, 0, 0) scale(1.02);
+  animation: wallpaper-float 46s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+[data-theme="dark"] body::before {
+  background-image: url("/images/wallpaper-dark.svg");
+}
+
+@keyframes wallpaper-float {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.02);
+  }
+  to {
+    transform: translate3d(-2%, -1.4%, 0) scale(1.07);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}
+
+/* 卡片改为半透明，让壁纸透出来 */
+:root {
+  --card-bg: rgba(255, 255, 255, 0.86);
+}
+
+[data-theme="dark"] {
+  --card-bg: rgba(24, 24, 28, 0.9);
+}

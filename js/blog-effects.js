@@ -20,8 +20,9 @@
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     var W = 0, H = 0;
-    var count = window.innerWidth < 768 ? 12 : 22;
+    var count = window.innerWidth < 768 ? 14 : 26;
     var petals = [];
+    var PETAL_COLORS = ['255, 61, 127', '255, 111, 165', '255, 138, 92', '255, 201, 60', '176, 107, 255', '255, 94, 156'];
 
     function resize() {
       W = window.innerWidth;
@@ -37,15 +38,15 @@
       return {
         x: Math.random() * W,
         y: fromTop ? -30 - Math.random() * 80 : Math.random() * H,
-        size: 5 + Math.random() * 7,
-        vy: 0.3 + Math.random() * 0.55,
+        size: 7 + Math.random() * 7,
+        vy: 0.36 + Math.random() * 0.6,
         vx: -0.2 + Math.random() * 0.4,
         sway: Math.random() * Math.PI * 2,
         swaySpeed: 0.008 + Math.random() * 0.018,
         rot: Math.random() * Math.PI * 2,
         rotSpeed: -0.012 + Math.random() * 0.024,
-        alpha: 0.3 + Math.random() * 0.45,
-        color: Math.random() < 0.45 ? '255, 182, 193' : '255, 255, 255'
+        alpha: 0.72 + Math.random() * 0.26,
+        color: PETAL_COLORS[(Math.random() * PETAL_COLORS.length) | 0]
       };
     }
 
@@ -58,6 +59,8 @@
       ctx.moveTo(0, 0);
       ctx.bezierCurveTo(s * 0.55, -s * 0.5, s * 0.95, -s * 0.1, s * 0.72, s * 0.3);
       ctx.bezierCurveTo(s * 0.5, s * 0.6, s * 0.15, s * 0.5, 0, 0);
+      ctx.shadowColor = 'rgba(' + p.color + ',0.6)';
+      ctx.shadowBlur = 7;
       ctx.fillStyle = 'rgba(' + p.color + ',' + p.alpha.toFixed(3) + ')';
       ctx.fill();
       ctx.restore();
@@ -97,6 +100,7 @@
     var ctx = canvas.getContext('2d');
     var W = 0, H = 0;
     var meteors = [];
+    var METEOR_COLORS = ['255, 224, 130', '127, 227, 255', '217, 166, 255', '255, 158, 199'];
 
     function resize() {
       W = window.innerWidth;
@@ -111,37 +115,41 @@
     function spawn() {
       meteors.push({
         x: W * (0.3 + Math.random() * 0.7),
-        y: Math.random() * H * 0.42,
-        len: 90 + Math.random() * 150,
-        vx: -2.6 - Math.random() * 2.4,
-        vy: 1.7 + Math.random() * 1.1,
+        y: Math.random() * H * 0.45,
+        len: 120 + Math.random() * 140,
+        vx: -2.9 - Math.random() * 2.6,
+        vy: 1.8 + Math.random() * 1.2,
         life: 0,
-        maxLife: 80 + Math.random() * 50
+        maxLife: 90 + Math.random() * 50,
+        color: METEOR_COLORS[(Math.random() * METEOR_COLORS.length) | 0]
       });
     }
 
     function drawMeteor(m) {
       var t = m.life / m.maxLife;
-      var alpha = Math.sin(Math.PI * Math.min(t * 1.15, 1)) * 0.55;
+      var alpha = Math.sin(Math.PI * Math.min(t * 1.15, 1)) * 0.95;
       if (alpha <= 0.01) return;
       var norm = Math.sqrt(m.vx * m.vx + m.vy * m.vy) || 1;
       var tx = m.x - (m.vx / norm) * m.len;
       var ty = m.y - (m.vy / norm) * m.len;
       var g = ctx.createLinearGradient(m.x, m.y, tx, ty);
-      g.addColorStop(0, 'rgba(255,255,255,' + alpha.toFixed(3) + ')');
-      g.addColorStop(0.35, 'rgba(200,230,255,' + (alpha * 0.35).toFixed(3) + ')');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
+      g.addColorStop(0, 'rgba(' + m.color + ',' + alpha.toFixed(3) + ')');
+      g.addColorStop(0.45, 'rgba(' + m.color + ',' + (alpha * 0.4).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(' + m.color + ',0)');
       ctx.strokeStyle = g;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 2.4;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(m.x, m.y);
       ctx.lineTo(tx, ty);
       ctx.stroke();
       ctx.beginPath();
-      ctx.arc(m.x, m.y, 1.8, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,' + alpha.toFixed(3) + ')';
+      ctx.arc(m.x, m.y, 2.4, 0, Math.PI * 2);
+      ctx.shadowColor = 'rgba(' + m.color + ',' + alpha.toFixed(3) + ')';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = 'rgba(' + m.color + ',' + alpha.toFixed(3) + ')';
       ctx.fill();
+      ctx.shadowBlur = 0;
     }
 
     function tick() {
@@ -165,16 +173,16 @@
       setTimeout(function () {
         if (!document.hidden) {
           spawn();
-          if (Math.random() < 0.35) setTimeout(spawn, 400 + Math.random() * 600);
+          if (Math.random() < 0.45) setTimeout(spawn, 400 + Math.random() * 600);
         }
         schedule();
-      }, 3500 + Math.random() * 6000);
+      }, 2200 + Math.random() * 3800);
     }
 
     resize();
     window.addEventListener('resize', resize);
     requestAnimationFrame(tick);
-    setTimeout(function () { spawn(); schedule(); }, 1600);
+    setTimeout(function () { spawn(); schedule(); }, 900);
   }
 
   /* ---------------- 点赞按钮 ---------------- */
