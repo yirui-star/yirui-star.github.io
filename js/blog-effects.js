@@ -286,8 +286,8 @@
     update();
   }
 
-  /* ---------------- 滚动入场动画 ---------------- */
-  function initScrollReveal() {
+  /* ---------------- 滚动驱动动画（由远及近 + 双向联动） ---------------- */
+  function initScrollMotion() {
     if (reduceMotion) return;
 
     var selectors = [
@@ -303,31 +303,125 @@
       '#article-container > table',
       '#article-container > img'
     ];
+
     var items = [];
+    var seen = [];
     for (var s = 0; s < selectors.length; s++) {
       var nodes = document.querySelectorAll(selectors[s]);
-      for (var n = 0; n < nodes.length; n++) items.push(nodes[n]);
+      for (var n = 0; n < nodes.length; n++) {
+        var el = nodes[n];
+        if (seen.indexOf(el) !== -1) continue;
+        seen.push(el);
+        var isCard = el.classList.contains('recent-post-item');
+        var isAside = !isCard && !!el.closest('#aside-content');
+        items.push({
+          el: el,
+          top: 0,
+          h: 0,
+          cur: -1,
+          ampY: isCard ? 58 : isAside ? 42 : 30,
+          ampS: isCard ? 0.09 : isAside ? 0.07 : 0.035,
+          ampR: isCard ? 3.2 : isAside ? 2.2 : 1,
+          begun: false
+        });
+        el.classList.add('motion-el');
+      }
     }
     if (!items.length) return;
 
-    document.documentElement.classList.add('reveal-ready');
-
-    var io = new IntersectionObserver(function (entries) {
-      var shown = [];
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].isIntersecting) shown.push(entries[i].target);
+    function measure() {
+      var sy = window.pageYOffset || 0;
+      for (var i = 0; i < items.length; i++) {
+        var r = items[i].el.getBoundingClientRect();
+        items[i].top = r.top + sy;
+        items[i].h = r.height;
       }
-      for (var j = 0; j < shown.length; j++) {
-        shown[j].style.transitionDelay = Math.min(j * 70, 350) + 'ms';
-        shown[j].classList.add('is-visible');
-        io.unobserve(shown[j]);
-      }
-    }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
-
-    for (var k = 0; k < items.length; k++) {
-      items[k].classList.add('reveal-item');
-      io.observe(items[k]);
     }
+
+    function apply(it, c) {
+      var y = (1 - c) * it.ampY;
+      var sc = 1 - (1 - c) * it.ampS;
+      var rot = (1 - c) * it.ampR;
+      it.el.style.setProperty('--my', y.toFixed(2) + 'px');
+      it.el.style.setProperty('--ms', sc.toFixed(4));
+      it.el.style.setProperty('--mr', rot.toFixed(2) + 'deg');
+      it.el.style.opacity = (0.05 + 0.95 * c).toFixed(3);
+    }
+
+    var hero = document.querySelector('#page-header.full_page');
+    var heroTitle = document.getElementById('site-title');
+    var heroSub = document.getElementById('site-subtitle');
+
+    function heroFrame(sy, vh) {
+      if (!hero) return;
+      var p = sy / (vh * 0.55);
+      p = p < 0 ? 0 : p > 1 ? 1 : p;
+      var e = 1 - Math.pow(1 - p, 2.2);
+      if (heroTitle) {
+        heroTitle.style.transform = 'translate3d(0,' + (-e * 74).toFixed(2) + 'px,0) scale(' + (1 - e * 0.06).toFixed(4) + ')';
+        heroTitle.style.opacity = (1 - e * 0.92).toFixed(3);
+      }
+      if (heroSub) {
+        heroSub.style.transform = 'translate3d(0,' + (-e * 52).toFixed(2) + 'px,0)';
+        heroSub.style.opacity = (1 - e * 0.95).toFixed(3);
+      }
+    }
+
+    var rafId = null;
+
+    function loop() {
+      rafId = null;
+      var vh = window.innerHeight;
+      var sy = window.pageYOffset || 0;
+      var moving = false;
+
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        var rel = it.top - sy;
+
+        /* 远离视口：直接落到终态，避免无谓计算 */
+        if (rel > vh * 1.7) {
+          if (!it.begun) continue;
+          if (it.cur !== 0) { it.cur = 0; apply(it, 0); }
+          continue;
+        }
+        if (rel + it.h < -vh * 0.5) {
+          if (it.cur !== 1) { it.cur = 1; apply(it, 1); }
+          continue;
+        }
+
+        it.begun = true;
+
+        /* 进度：元素顶部从视口 94% 处进入，到 52% 处完全就位 */
+        var raw = (vh * 0.94 - rel) / (vh * 0.42);
+        var p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+        var eased = 1 - Math.pow(1 - p, 3);
+        var d = eased - it.cur;
+        if (Math.abs(d) > 0.0012) {
+          it.cur += d * 0.14;
+          moving = true;
+        } else {
+          it.cur = eased;
+        }
+        apply(it, it.cur);
+      }
+
+      heroFrame(sy, vh);
+
+      if (moving) rafId = requestAnimationFrame(loop);
+    }
+
+    function kick() {
+      if (rafId === null) rafId = requestAnimationFrame(loop);
+    }
+
+    measure();
+    kick();
+
+    window.addEventListener('scroll', kick, { passive: true });
+    window.addEventListener('resize', function () { measure(); kick(); });
+    window.addEventListener('load', function () { measure(); kick(); });
+    setTimeout(function () { measure(); kick(); }, 900);
   }
 
   /* ---------------- 点击水波纹 ---------------- */
@@ -709,7 +803,7 @@
     initLike();
     initWallpaperParallax();
     initScrollProgress();
-    initScrollReveal();
+    initScrollMotion();
     initRipple();
     initLeafScene();
   }

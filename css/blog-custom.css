@@ -266,14 +266,29 @@ html.reveal-ready .reveal-item.is-visible {
   transform: none;
 }
 
-/* 2. 卡片悬停：上浮 + 封面微微放大 */
+/* 2. 卡片悬停：上浮 + 封面微微放大（与滚动动画叠加） */
+@property --motion-lift {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.motion-el {
+  transform: perspective(1200px)
+    translate3d(0, calc(var(--my, 0px) + var(--motion-lift, 0px)), 0)
+    scale(var(--ms, 1)) rotateX(var(--mr, 0deg));
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+}
+
 .recent-post-item {
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.35s ease;
+  --motion-lift: 0px;
+  transition: --motion-lift 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease;
 }
 
 .recent-post-item:hover {
-  transform: translateY(-6px);
+  --motion-lift: -6px;
   box-shadow: 0 18px 40px rgba(122, 60, 30, 0.18);
 }
 
