@@ -292,7 +292,6 @@
 
     var selectors = [
       '.recent-post-item',
-      '#aside-content .card-widget',
       '#article-container > h2',
       '#article-container > h3',
       '#article-container > p',
