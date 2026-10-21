@@ -435,7 +435,7 @@ html.reveal-ready .reveal-item.is-visible {
 #footer {
   position: relative;
   overflow: hidden;
-  padding-bottom: 148px;
+  padding-bottom: 176px;
 }
 
 #footer > *:not(#leaf-pile) {
@@ -448,7 +448,7 @@ html.reveal-ready .reveal-item.is-visible {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 240px;
+  height: 280px;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;

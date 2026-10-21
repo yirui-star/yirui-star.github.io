@@ -88,7 +88,7 @@
         p.rot += p.rotSpeed;
 
         if (leafPile && leafPile.hit(p.x, p.y)) {
-          leafPile.land(p.x, p.color, p.size);
+          leafPile.land(p.x, p.color, p.size, p.rot, p.y);
           petals[i] = makePetal(true);
           continue;
         }
@@ -356,7 +356,7 @@
     }
   }
 
-  /* ---------------- 页脚落叶堆：3D 层次 + 落地 + 微风循环 ---------------- */
+  /* ---------------- 页脚落叶堆：3D 层次 + 软着陆 + 微风循环 ---------------- */
   function initLeafScene() {
     var footer = document.getElementById('footer');
     if (!footer || document.getElementById('leaf-pile')) return;
@@ -368,7 +368,7 @@
 
     var ctx = canvas.getContext('2d');
     var W = 0;
-    var H = 240;
+    var H = 280;
     var base = null;
     var dyn = [];
     var rect = null;
@@ -383,12 +383,13 @@
       return 'rgb(' + r + ',' + g + ',' + b + ')';
     }
 
-    /* 三层"山脊"轮廓：back 最高最远，front 最低最近 */
+    /* 四层"山脊"轮廓：0 最远最高，3 最近最低 */
     function surfaceY(x, layer) {
       var t = x / Math.max(W, 1);
-      if (layer === 0) return H - (86 + 30 * Math.sin(t * 5.6 + 0.4) + 14 * Math.sin(t * 12.3 + 2.1));
-      if (layer === 1) return H - (58 + 26 * Math.sin(t * 4.7 + 1.6) + 12 * Math.sin(t * 10.1 + 0.3));
-      return H - (30 + 22 * Math.sin(t * 3.9 + 2.6) + 9 * Math.sin(t * 8.2 + 1.1));
+      if (layer === 0) return H - (108 + 34 * Math.sin(t * 5.6 + 0.4) + 16 * Math.sin(t * 12.3 + 2.1));
+      if (layer === 1) return H - (76 + 30 * Math.sin(t * 4.7 + 1.6) + 14 * Math.sin(t * 10.1 + 0.3));
+      if (layer === 2) return H - (44 + 24 * Math.sin(t * 3.9 + 2.6) + 10 * Math.sin(t * 8.2 + 1.1));
+      return H - (18 + 10 * Math.sin(t * 3.1 + 1.2) + 5 * Math.sin(t * 7.3 + 2.7));
     }
 
     function drawLeafShape(c, x, y, size, rot, color, alpha, vein) {
@@ -421,17 +422,27 @@
       var c = off.getContext('2d');
       c.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      /* 最远的深色"山体"，让叶子之间有厚度感 */
+      c.beginPath();
+      c.moveTo(-20, H);
+      for (var bx = -20; bx <= W + 20; bx += 14) c.lineTo(bx, surfaceY(bx, 0) + 30);
+      c.lineTo(W + 20, H);
+      c.closePath();
+      c.fillStyle = 'rgba(52, 20, 18, 0.62)';
+      c.fill();
+
       var layers = [
-        { depth: 46, step: 9, smin: 5, smax: 12, shade: 0.42, alpha: 0.92 },
-        { depth: 60, step: 9, smin: 7, smax: 15, shade: 0.66, alpha: 0.96 },
-        { depth: 74, step: 10, smin: 9, smax: 20, shade: 1, alpha: 1 }
+        { depth: 58, step: 8, smin: 5, smax: 11, shade: 0.38, alpha: 0.92 },
+        { depth: 76, step: 8, smin: 7, smax: 14, shade: 0.58, alpha: 0.96 },
+        { depth: 96, step: 8, smin: 9, smax: 17, shade: 0.8, alpha: 1 },
+        { depth: 54, step: 9, smin: 12, smax: 20, shade: 1, alpha: 1 }
       ];
 
-      for (var li = 0; li < 3; li++) {
+      for (var li = 0; li < layers.length; li++) {
         var cfg = layers[li];
-        for (var x = -20; x < W + 20; x += cfg.step * (0.7 + Math.random() * 0.6)) {
+        for (var x = -20; x < W + 20; x += cfg.step * (0.65 + Math.random() * 0.7)) {
           var top = surfaceY(x, li);
-          for (var y = top + 2; y < Math.min(H + 8, top + cfg.depth); y += 4 + Math.random() * 3.5) {
+          for (var y = top + 2; y < Math.min(H + 8, top + cfg.depth); y += 3.5 + Math.random() * 3) {
             var size = cfg.smin + Math.random() * (cfg.smax - cfg.smin);
             drawLeafShape(
               c,
@@ -441,18 +452,18 @@
               Math.random() * Math.PI * 2,
               shade(COLORS[(Math.random() * COLORS.length) | 0], cfg.shade),
               cfg.alpha,
-              li === 2 && Math.random() < 0.55
+              li >= 2 && Math.random() < 0.5
             );
           }
         }
       }
 
-      /* 底部压暗，让"山势"更沉 */
-      var g = c.createLinearGradient(0, H - 60, 0, H);
-      g.addColorStop(0, 'rgba(36, 13, 21, 0)');
-      g.addColorStop(1, 'rgba(36, 13, 21, 0.55)');
+      /* 底部压暗，坐实"重量" */
+      var g = c.createLinearGradient(0, H - 70, 0, H);
+      g.addColorStop(0, 'rgba(34, 12, 20, 0)');
+      g.addColorStop(1, 'rgba(34, 12, 20, 0.6)');
       c.fillStyle = g;
-      c.fillRect(0, H - 60, W, 60);
+      c.fillRect(0, H - 70, W, 70);
 
       base = off;
     }
@@ -466,14 +477,28 @@
         rot: Math.random() * Math.PI * 2,
         size: 9 + Math.random() * 9,
         color: COLORS[(Math.random() * COLORS.length) | 0],
-        phase: Math.random() * Math.PI * 2
+        phase: Math.random() * Math.PI * 2,
+        hops: 0
       };
     }
 
     function reseed() {
       dyn = [];
-      var n = Math.max(18, Math.round(W / 70));
+      var n = Math.max(24, Math.round(W / 42));
       for (var i = 0; i < n; i++) dyn.push(makeSettled(Math.random() * W));
+    }
+
+    /* 软着陆：带着原有角度缓慢落下 + 轻微回弹，不再瞬间定格 */
+    function startLanding(L, sx, sy, tx, ty) {
+      L.state = 'landing';
+      L.t = 0;
+      L.dur = 18 + ((Math.random() * 8) | 0);
+      L.x0 = sx;
+      L.sy = sy;
+      L.tx = tx;
+      L.ty = ty;
+      L.bounce = 2 + Math.random() * 4;
+      L.spin = (Math.random() - 0.5) * 0.05;
     }
 
     function gust() {
@@ -483,32 +508,54 @@
       var n = Math.min(settled.length, 1 + ((Math.random() * 2) | 0));
       for (var k = 0; k < n; k++) {
         var L = settled.splice((Math.random() * settled.length) | 0, 1)[0];
-        L.state = 'blow';
-        L.t = 0;
-        L.dur = 130 + Math.random() * 55;
-        L.dir = Math.random() < 0.5 ? -1 : 1;
-        L.y0 = L.y;
-        L.spin = L.dir * (Math.PI * 4 / L.dur);
+        L.hops = (L.hops || 0) + 1;
+
+        var nearEdge = L.x < 70 || L.x > W - 70;
+        if (L.hops >= 3 || nearEdge) {
+          /* 飞出去：转两整圈，从左右边缘离开 */
+          L.state = 'blow';
+          L.t = 0;
+          L.dur = 140 + Math.random() * 60;
+          L.dir = L.x < W / 2 ? -1 : 1;
+          L.y0 = L.y;
+          L.spin = L.dir * (Math.PI * 4 / L.dur);
+        } else {
+          /* 转个圈：回到原处附近，或者往一侧挪一点 */
+          L.state = 'swirl';
+          L.t = 0;
+          L.dur = 70 + Math.random() * 40;
+          L.cx = L.x;
+          L.cy = L.y - 22;
+          L.r = 9 + Math.random() * 13;
+          L.ang0 = Math.random() * Math.PI * 2;
+          L.dir = Math.random() < 0.5 ? -1 : 1;
+          L.turns = 1 + Math.random() * 0.8;
+          L.spin = L.dir * (Math.PI * 4 / L.dur);
+          L.homeX = L.x;
+          L.backHome = Math.random() < 0.45;
+        }
       }
 
       var m = 1 + ((Math.random() * 2) | 0);
       for (var j = 0; j < m; j++) {
         var fromLeft = Math.random() < 0.5;
-        var tx = 50 + Math.random() * Math.max(W - 100, 1);
+        var tx2 = 50 + Math.random() * Math.max(W - 100, 1);
+        var ty2 = surfaceY(tx2, 2) - 4;
         dyn.push({
           state: 'arrive',
           t: 0,
           dur: 110 + Math.random() * 45,
           x0: fromLeft ? -46 : W + 46,
-          y0: surfaceY(tx, 2) - 80 - Math.random() * 50,
-          tx: tx,
-          ty: surfaceY(tx, 2) - 4,
+          y0: surfaceY(tx2, 2) - 90 - Math.random() * 40,
+          tx: tx2,
+          ty: ty2,
           x: fromLeft ? -46 : W + 46,
           y: 0,
           rot: Math.random() * Math.PI * 2,
           spin: (fromLeft ? 1 : -1) * (Math.PI * 4 / 120),
           size: 9 + Math.random() * 8,
-          color: COLORS[(Math.random() * COLORS.length) | 0]
+          color: COLORS[(Math.random() * COLORS.length) | 0],
+          hops: 0
         });
       }
 
@@ -532,13 +579,42 @@
           continue;
         }
 
+        if (L.state === 'landing') {
+          var kl = Math.min(L.t / L.dur, 1);
+          L.x = L.x0 + (L.tx - L.x0) * kl;
+          L.y = L.sy + (L.ty - L.sy) * kl - Math.sin(Math.PI * kl) * L.bounce;
+          L.rot += L.spin * (1 - kl);
+          drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, 1, true);
+          if (kl >= 1) {
+            L.state = 'settled';
+            L.x = L.tx;
+            L.y = L.ty;
+            L.phase = Math.random() * Math.PI * 2;
+            L.spin = 0;
+          }
+          continue;
+        }
+
         var k = L.t / L.dur;
 
-        if (L.state === 'blow') {
-          L.x += L.dir * (2.4 + k * 5.2);
-          L.y = L.y0 - Math.sin(Math.PI * Math.min(k, 1)) * 48 + k * 10;
+        if (L.state === 'swirl') {
+          var ang = L.ang0 + L.dir * Math.PI * 2 * L.turns * k;
+          L.x = L.cx + Math.cos(ang) * L.r;
+          L.y = L.cy + Math.sin(ang) * L.r * 0.7;
           L.rot += L.spin;
-          var a = k < 0.8 ? 1 : Math.max(0, 1 - (k - 0.8) / 0.2);
+          drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, 1, false);
+          if (k >= 1) {
+            var nx = L.backHome
+              ? L.homeX + (Math.random() - 0.5) * 14
+              : L.homeX + L.dir * (36 + Math.random() * 52);
+            nx = Math.max(16, Math.min(W - 16, nx));
+            startLanding(L, L.x, L.y, nx, surfaceY(nx, 2) - 4);
+          }
+        } else if (L.state === 'blow') {
+          L.x += L.dir * (2.2 + k * 4.8);
+          L.y = L.y0 - Math.sin(Math.PI * Math.min(k, 1)) * 46 + k * 12;
+          L.rot += L.spin;
+          var a = k < 0.82 ? 1 : Math.max(0, 1 - (k - 0.82) / 0.18);
           drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, a, false);
           if (k >= 1 || L.x < -90 || L.x > W + 90) dyn.splice(i, 1);
         } else if (L.state === 'arrive') {
@@ -547,11 +623,7 @@
           L.rot += L.spin;
           drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, Math.min(1, k * 4), true);
           if (k >= 1) {
-            L.state = 'settled';
-            L.x = L.tx;
-            L.y = L.ty;
-            L.rot = Math.random() * Math.PI * 2;
-            L.phase = Math.random() * Math.PI * 2;
+            startLanding(L, L.tx, L.ty - 10, L.tx + (Math.random() - 0.5) * 10, L.ty);
           }
         }
       }
@@ -582,7 +654,7 @@
       new IntersectionObserver(function (entries) {
         visible = entries[0].isIntersecting;
         if (visible && !base) buildBase();
-      }, { rootMargin: '200px 0px 200px 0px' }).observe(canvas);
+      }, { rootMargin: '240px 0px 240px 0px' }).observe(canvas);
     } else {
       visible = true;
     }
@@ -599,19 +671,22 @@
         if (lx < -20 || lx > W + 20) return false;
         return y >= rect.top + surfaceY(lx, 2) - 4;
       },
-      land: function (x, color, size) {
+      land: function (x, color, size, rot, yVp) {
         if (!rect) return;
         var lx = x - rect.left;
-        dyn.push({
-          state: 'settled',
-          x: lx,
-          y: surfaceY(lx, 2) - 4,
-          rot: Math.random() * Math.PI * 2,
+        var ty = surfaceY(lx, 2) - 4;
+        var sy = typeof yVp === 'number' ? Math.min(yVp - rect.top, ty - 2) : ty - 20;
+        var L = {
+          state: 'landing',
+          t: 0,
+          rot: rot || 0,
           size: Math.min(18, (size || 12) * 0.85),
           color: 'rgb(' + color + ')',
-          phase: Math.random() * Math.PI * 2
-        });
-        if (dyn.length > 90) {
+          hops: 0
+        };
+        startLanding(L, lx, sy, lx + (Math.random() - 0.5) * 12, ty);
+        dyn.push(L);
+        if (dyn.length > 110) {
           for (var i = 0; i < dyn.length; i++) {
             if (dyn[i].state === 'settled') {
               dyn.splice(i, 1);
