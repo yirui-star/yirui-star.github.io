@@ -23,7 +23,7 @@
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     var W = 0, H = 0;
-    var count = window.innerWidth < 768 ? 14 : 26;
+    var count = window.innerWidth < 768 ? 14 : 22;
     var petals = [];
     var PETAL_COLORS = ['255, 111, 60', '240, 166, 60', '200, 60, 40', '176, 90, 40', '230, 200, 90', '160, 70, 30'];
 
@@ -42,12 +42,12 @@
         x: Math.random() * W,
         y: fromTop ? -30 - Math.random() * 80 : Math.random() * H,
         size: 9 + Math.random() * 9,
-        vy: 0.36 + Math.random() * 0.6,
+        vy: 0.16 + Math.random() * 0.32,
         vx: -0.2 + Math.random() * 0.4,
         sway: Math.random() * Math.PI * 2,
-        swaySpeed: 0.008 + Math.random() * 0.018,
+        swaySpeed: 0.005 + Math.random() * 0.012,
         rot: Math.random() * Math.PI * 2,
-        rotSpeed: -0.012 + Math.random() * 0.024,
+        rotSpeed: -0.005 + Math.random() * 0.01,
         alpha: 0.8 + Math.random() * 0.18,
         color: PETAL_COLORS[(Math.random() * PETAL_COLORS.length) | 0]
       };
@@ -492,20 +492,20 @@
     function startLanding(L, sx, sy, tx, ty) {
       L.state = 'landing';
       L.t = 0;
-      L.dur = 18 + ((Math.random() * 8) | 0);
+      L.dur = 26 + ((Math.random() * 12) | 0);
       L.x0 = sx;
       L.sy = sy;
       L.tx = tx;
       L.ty = ty;
-      L.bounce = 2 + Math.random() * 4;
-      L.spin = (Math.random() - 0.5) * 0.05;
+      L.bounce = 1.2 + Math.random() * 2.4;
+      L.spin = (Math.random() - 0.5) * 0.03;
     }
 
     function gust() {
       var settled = [];
       for (var i = 0; i < dyn.length; i++) if (dyn[i].state === 'settled') settled.push(dyn[i]);
 
-      var n = Math.min(settled.length, 1 + ((Math.random() * 2) | 0));
+      var n = Math.min(settled.length, Math.random() < 0.8 ? 1 : 2);
       for (var k = 0; k < n; k++) {
         var L = settled.splice((Math.random() * settled.length) | 0, 1)[0];
         L.hops = (L.hops || 0) + 1;
@@ -515,24 +515,24 @@
           /* 飞出去：转两整圈，从左右边缘离开 */
           L.state = 'blow';
           L.t = 0;
-          L.dur = 140 + Math.random() * 60;
+          L.dur = 260 + Math.random() * 100;
           L.dir = L.x < W / 2 ? -1 : 1;
           L.y0 = L.y;
-          L.spin = L.dir * (Math.PI * 4 / L.dur);
+          L.spin = L.dir * (Math.PI * 3.2 / L.dur);
         } else {
           /* 转个圈：回到原处附近，或者往一侧挪一点 */
           L.state = 'swirl';
           L.t = 0;
-          L.dur = 70 + Math.random() * 40;
+          L.dur = 150 + Math.random() * 90;
           L.cx = L.x;
           L.cy = L.y - 22;
-          L.r = 9 + Math.random() * 13;
+          L.r = 8 + Math.random() * 9;
           L.ang0 = Math.random() * Math.PI * 2;
           L.dir = Math.random() < 0.5 ? -1 : 1;
-          L.turns = 1 + Math.random() * 0.8;
-          L.spin = L.dir * (Math.PI * 4 / L.dur);
+          L.turns = 0.8 + Math.random() * 0.5;
+          L.spin = L.dir * (Math.PI * 2.4 / L.dur);
           L.homeX = L.x;
-          L.backHome = Math.random() < 0.45;
+          L.backHome = Math.random() < 0.55;
         }
       }
 
@@ -544,22 +544,22 @@
         dyn.push({
           state: 'arrive',
           t: 0,
-          dur: 110 + Math.random() * 45,
+          dur: 180 + Math.random() * 70,
           x0: fromLeft ? -46 : W + 46,
-          y0: surfaceY(tx2, 2) - 90 - Math.random() * 40,
+          y0: surfaceY(tx2, 2) - 70 - Math.random() * 30,
           tx: tx2,
           ty: ty2,
           x: fromLeft ? -46 : W + 46,
           y: 0,
           rot: Math.random() * Math.PI * 2,
-          spin: (fromLeft ? 1 : -1) * (Math.PI * 4 / 120),
+          spin: (fromLeft ? 1 : -1) * (Math.PI * 2.6 / 200),
           size: 9 + Math.random() * 8,
           color: COLORS[(Math.random() * COLORS.length) | 0],
           hops: 0
         });
       }
 
-      gustTimer = setTimeout(gust, 4200 + Math.random() * 3600);
+      gustTimer = setTimeout(gust, 7500 + Math.random() * 4500);
     }
 
     function frame() {
@@ -574,8 +574,8 @@
         L.t = (L.t || 0) + 1;
 
         if (L.state === 'settled') {
-          L.phase += 0.025;
-          drawLeafShape(ctx, L.x, L.y, L.size, L.rot + Math.sin(L.phase) * 0.1, L.color, 1, true);
+          L.phase += 0.012;
+          drawLeafShape(ctx, L.x, L.y, L.size, L.rot + Math.sin(L.phase) * 0.06, L.color, 1, true);
           continue;
         }
 
@@ -606,13 +606,13 @@
           if (k >= 1) {
             var nx = L.backHome
               ? L.homeX + (Math.random() - 0.5) * 14
-              : L.homeX + L.dir * (36 + Math.random() * 52);
+              : L.homeX + L.dir * (22 + Math.random() * 34);
             nx = Math.max(16, Math.min(W - 16, nx));
             startLanding(L, L.x, L.y, nx, surfaceY(nx, 2) - 4);
           }
         } else if (L.state === 'blow') {
-          L.x += L.dir * (2.2 + k * 4.8);
-          L.y = L.y0 - Math.sin(Math.PI * Math.min(k, 1)) * 46 + k * 12;
+          L.x += L.dir * (1.2 + k * 2.4);
+          L.y = L.y0 - Math.sin(Math.PI * Math.min(k, 1)) * 38 + k * 8;
           L.rot += L.spin;
           var a = k < 0.82 ? 1 : Math.max(0, 1 - (k - 0.82) / 0.18);
           drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, a, false);
@@ -698,7 +698,7 @@
     };
 
     if (!reduceMotion) {
-      gustTimer = setTimeout(gust, 2500);
+      gustTimer = setTimeout(gust, 4000);
     }
     requestAnimationFrame(frame);
   }
