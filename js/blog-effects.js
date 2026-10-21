@@ -319,6 +319,7 @@
           top: 0,
           h: 0,
           cur: -1,
+          mode: isCard || isAside ? 'window' : 'enter',
           ampY: isCard ? 58 : isAside ? 42 : 30,
           ampS: isCard ? 0.09 : isAside ? 0.07 : 0.035,
           ampR: isCard ? 3.2 : isAside ? 2.2 : 1,
@@ -378,27 +379,39 @@
       for (var i = 0; i < items.length; i++) {
         var it = items[i];
         var rel = it.top - sy;
+        var eased;
 
-        /* 远离视口：直接落到终态，避免无谓计算 */
-        if (rel > vh * 1.7) {
-          if (!it.begun) continue;
-          if (it.cur !== 0) { it.cur = 0; apply(it, 0); }
-          continue;
-        }
-        if (rel + it.h < -vh * 0.5) {
-          if (it.cur !== 1) { it.cur = 1; apply(it, 1); }
-          continue;
+        if (it.mode === 'window') {
+          /* 卡片：以"卡片中心"到视口中心的距离决定远近，上下双向对称 —— 滑过顶部会淡出，回滑时重新浮上来 */
+          if (rel > vh * 2.2 || rel + it.h < -vh * 1.2) {
+            if (it.cur !== 0) { it.cur = 0; apply(it, 0); }
+            continue;
+          }
+          var centerY = rel + it.h / 2;
+          var d = (centerY - vh * 0.5) / (vh * 0.7);
+          var pEdge = 1 - d * d;
+          var pw = pEdge < 0 ? 0 : pEdge > 1 ? 1 : pEdge;
+          eased = Math.pow(pw, 0.85);
+        } else {
+          /* 正文块：进入视口就位位，之后保持可读 */
+          if (rel > vh * 1.7) {
+            if (it.cur !== 0) { it.cur = 0; apply(it, 0); }
+            continue;
+          }
+          if (rel + it.h < -vh * 0.5) {
+            if (it.cur !== 1) { it.cur = 1; apply(it, 1); }
+            continue;
+          }
+          var raw = (vh * 0.94 - rel) / (vh * 0.42);
+          var p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
+          eased = 1 - Math.pow(1 - p, 3);
         }
 
         it.begun = true;
 
-        /* 进度：元素顶部从视口 94% 处进入，到 52% 处完全就位 */
-        var raw = (vh * 0.94 - rel) / (vh * 0.42);
-        var p = raw < 0 ? 0 : raw > 1 ? 1 : raw;
-        var eased = 1 - Math.pow(1 - p, 3);
-        var d = eased - it.cur;
-        if (Math.abs(d) > 0.0012) {
-          it.cur += d * 0.14;
+        var diff = eased - it.cur;
+        if (Math.abs(diff) > 0.0012) {
+          it.cur += diff * 0.14;
           moving = true;
         } else {
           it.cur = eased;
