@@ -1,5 +1,5 @@
 /* ============================================================
-   博客自定义特效：花瓣飘落 + 流星 + 点赞按钮
+   博客自定义特效：落叶 + 流星 + 点赞 + 页脚落叶堆（3D 场景）
    ============================================================ */
 (function () {
   'use strict';
@@ -11,7 +11,10 @@
 
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-  /* ---------------- 花瓣飘落 ---------------- */
+  /* 页脚落叶场景（由 initLeafScene 赋值，供飘落落叶判断"落地"） */
+  var leafPile = null;
+
+  /* ---------------- 落叶飘落（全屏层） ---------------- */
   function initPetals() {
     if (reduceMotion || document.getElementById('petal-canvas')) return;
     var canvas = document.createElement('canvas');
@@ -83,6 +86,12 @@
         p.y += p.vy;
         p.x += p.vx + Math.sin(p.sway) * 0.55;
         p.rot += p.rotSpeed;
+
+        if (leafPile && leafPile.hit(p.x, p.y)) {
+          leafPile.land(p.x, p.color, p.size);
+          petals[i] = makePetal(true);
+          continue;
+        }
         if (p.y > H + 40 || p.x < -60 || p.x > W + 60) {
           petals[i] = makePetal(true);
           continue;
@@ -347,63 +356,276 @@
     }
   }
 
-  /* ---------------- 页脚落叶堆 ---------------- */
-  function initLeafPile() {
+  /* ---------------- 页脚落叶堆：3D 层次 + 落地 + 微风循环 ---------------- */
+  function initLeafScene() {
     var footer = document.getElementById('footer');
     if (!footer || document.getElementById('leaf-pile')) return;
 
-    var LEAF_COLORS = ['#c0392b', '#d35400', '#e2703a', '#f0a63c', '#c9a227', '#8b4a2b', '#a0522d', '#e88a4a'];
-    var parts = ['<svg viewBox="0 0 1600 200" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">'];
-    var i, x, y, s, r, c, dur, delay, lift;
+    var canvas = document.createElement('canvas');
+    canvas.id = 'leaf-pile';
+    canvas.setAttribute('aria-hidden', 'true');
+    footer.appendChild(canvas);
 
-    for (i = 0; i < 26; i++) {
-      x = Math.random() * 1600;
-      y = 152 + Math.random() * 44;
-      s = 0.65 + Math.random() * 0.5;
-      r = (Math.random() * 360) | 0;
-      c = LEAF_COLORS[(Math.random() * LEAF_COLORS.length) | 0];
-      dur = (3.2 + Math.random() * 2.6).toFixed(2);
-      delay = (-Math.random() * 4).toFixed(2);
-      parts.push(
-        '<g transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ') rotate(' + r + ') scale(' + s.toFixed(2) + ')">' +
-        '<path class="pile-leaf" style="animation-duration:' + dur + 's;animation-delay:' + delay + 's" d="M0 0 Q 16 -10 0 -26 Q -16 -10 0 0 Z" fill="' + c + '" opacity="0.75"/>' +
-        '</g>'
-      );
+    var ctx = canvas.getContext('2d');
+    var W = 0;
+    var H = 240;
+    var base = null;
+    var dyn = [];
+    var rect = null;
+    var visible = false;
+    var gustTimer = null;
+    var COLORS = ['#c0392b', '#d35400', '#e2703a', '#f0a63c', '#c9a227', '#8b4a2b', '#a0522d', '#e88a4a'];
+
+    function shade(hex, f) {
+      var r = Math.round(parseInt(hex.slice(1, 3), 16) * f);
+      var g = Math.round(parseInt(hex.slice(3, 5), 16) * f);
+      var b = Math.round(parseInt(hex.slice(5, 7), 16) * f);
+      return 'rgb(' + r + ',' + g + ',' + b + ')';
     }
 
-    for (i = 0; i < 24; i++) {
-      x = Math.random() * 1600;
-      y = 168 + Math.random() * 30;
-      s = 0.95 + Math.random() * 0.6;
-      r = (Math.random() * 360) | 0;
-      c = LEAF_COLORS[(Math.random() * LEAF_COLORS.length) | 0];
-      dur = (3 + Math.random() * 2.4).toFixed(2);
-      delay = (-Math.random() * 4).toFixed(2);
-      lift = i < 6 ? ' lift' : '';
-      parts.push(
-        '<g transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ') rotate(' + r + ') scale(' + s.toFixed(2) + ')">' +
-        '<path class="pile-leaf' + lift + '" style="animation-duration:' + dur + 's;animation-delay:' + delay + 's" d="M0 0 Q 18 -11 0 -30 Q -18 -11 0 0 Z" fill="' + c + '"/>' +
-        '<path d="M0 -3 L0 -26" stroke="rgba(255,235,200,0.35)" stroke-width="1.2" fill="none"/>' +
-        '</g>'
-      );
-    }
-    parts.push('</svg>');
-
-    var pile = document.createElement('div');
-    pile.id = 'leaf-pile';
-    pile.setAttribute('aria-hidden', 'true');
-    pile.innerHTML = parts.join('');
-
-    for (i = 0; i < 3; i++) {
-      var breeze = document.createElement('div');
-      breeze.className = 'breeze-leaf';
-      breeze.style.animationDelay = (i * 4.1 + 1.5).toFixed(1) + 's';
-      breeze.style.bottom = (16 + i * 18) + 'px';
-      breeze.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2 Q 20 8 12 22 Q 4 8 12 2 Z" fill="' + LEAF_COLORS[i + 1] + '"/></svg>';
-      pile.appendChild(breeze);
+    /* 三层"山脊"轮廓：back 最高最远，front 最低最近 */
+    function surfaceY(x, layer) {
+      var t = x / Math.max(W, 1);
+      if (layer === 0) return H - (86 + 30 * Math.sin(t * 5.6 + 0.4) + 14 * Math.sin(t * 12.3 + 2.1));
+      if (layer === 1) return H - (58 + 26 * Math.sin(t * 4.7 + 1.6) + 12 * Math.sin(t * 10.1 + 0.3));
+      return H - (30 + 22 * Math.sin(t * 3.9 + 2.6) + 9 * Math.sin(t * 8.2 + 1.1));
     }
 
-    footer.appendChild(pile);
+    function drawLeafShape(c, x, y, size, rot, color, alpha, vein) {
+      c.save();
+      c.globalAlpha = alpha;
+      c.translate(x, y);
+      c.rotate(rot);
+      c.beginPath();
+      c.moveTo(0, 0);
+      c.quadraticCurveTo(size * 0.62, -size * 0.55, 0, -size * 1.15);
+      c.quadraticCurveTo(-size * 0.62, -size * 0.55, 0, 0);
+      c.fillStyle = color;
+      c.fill();
+      if (vein) {
+        c.beginPath();
+        c.moveTo(0, -2);
+        c.lineTo(0, -size * 0.95);
+        c.strokeStyle = 'rgba(255, 235, 205, 0.28)';
+        c.lineWidth = 1;
+        c.stroke();
+      }
+      c.restore();
+    }
+
+    function buildBase() {
+      if (!W) return;
+      var off = document.createElement('canvas');
+      off.width = Math.max(1, Math.round(W * dpr));
+      off.height = Math.round(H * dpr);
+      var c = off.getContext('2d');
+      c.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      var layers = [
+        { depth: 46, step: 9, smin: 5, smax: 12, shade: 0.42, alpha: 0.92 },
+        { depth: 60, step: 9, smin: 7, smax: 15, shade: 0.66, alpha: 0.96 },
+        { depth: 74, step: 10, smin: 9, smax: 20, shade: 1, alpha: 1 }
+      ];
+
+      for (var li = 0; li < 3; li++) {
+        var cfg = layers[li];
+        for (var x = -20; x < W + 20; x += cfg.step * (0.7 + Math.random() * 0.6)) {
+          var top = surfaceY(x, li);
+          for (var y = top + 2; y < Math.min(H + 8, top + cfg.depth); y += 4 + Math.random() * 3.5) {
+            var size = cfg.smin + Math.random() * (cfg.smax - cfg.smin);
+            drawLeafShape(
+              c,
+              x + (Math.random() - 0.5) * 7,
+              y + (Math.random() - 0.5) * 5,
+              size,
+              Math.random() * Math.PI * 2,
+              shade(COLORS[(Math.random() * COLORS.length) | 0], cfg.shade),
+              cfg.alpha,
+              li === 2 && Math.random() < 0.55
+            );
+          }
+        }
+      }
+
+      /* 底部压暗，让"山势"更沉 */
+      var g = c.createLinearGradient(0, H - 60, 0, H);
+      g.addColorStop(0, 'rgba(36, 13, 21, 0)');
+      g.addColorStop(1, 'rgba(36, 13, 21, 0.55)');
+      c.fillStyle = g;
+      c.fillRect(0, H - 60, W, 60);
+
+      base = off;
+    }
+
+    function makeSettled(x) {
+      var lx = Math.max(6, Math.min(W - 6, x));
+      return {
+        state: 'settled',
+        x: lx,
+        y: surfaceY(lx, 2) - 4,
+        rot: Math.random() * Math.PI * 2,
+        size: 9 + Math.random() * 9,
+        color: COLORS[(Math.random() * COLORS.length) | 0],
+        phase: Math.random() * Math.PI * 2
+      };
+    }
+
+    function reseed() {
+      dyn = [];
+      var n = Math.max(18, Math.round(W / 70));
+      for (var i = 0; i < n; i++) dyn.push(makeSettled(Math.random() * W));
+    }
+
+    function gust() {
+      var settled = [];
+      for (var i = 0; i < dyn.length; i++) if (dyn[i].state === 'settled') settled.push(dyn[i]);
+
+      var n = Math.min(settled.length, 1 + ((Math.random() * 2) | 0));
+      for (var k = 0; k < n; k++) {
+        var L = settled.splice((Math.random() * settled.length) | 0, 1)[0];
+        L.state = 'blow';
+        L.t = 0;
+        L.dur = 130 + Math.random() * 55;
+        L.dir = Math.random() < 0.5 ? -1 : 1;
+        L.y0 = L.y;
+        L.spin = L.dir * (Math.PI * 4 / L.dur);
+      }
+
+      var m = 1 + ((Math.random() * 2) | 0);
+      for (var j = 0; j < m; j++) {
+        var fromLeft = Math.random() < 0.5;
+        var tx = 50 + Math.random() * Math.max(W - 100, 1);
+        dyn.push({
+          state: 'arrive',
+          t: 0,
+          dur: 110 + Math.random() * 45,
+          x0: fromLeft ? -46 : W + 46,
+          y0: surfaceY(tx, 2) - 80 - Math.random() * 50,
+          tx: tx,
+          ty: surfaceY(tx, 2) - 4,
+          x: fromLeft ? -46 : W + 46,
+          y: 0,
+          rot: Math.random() * Math.PI * 2,
+          spin: (fromLeft ? 1 : -1) * (Math.PI * 4 / 120),
+          size: 9 + Math.random() * 8,
+          color: COLORS[(Math.random() * COLORS.length) | 0]
+        });
+      }
+
+      gustTimer = setTimeout(gust, 4200 + Math.random() * 3600);
+    }
+
+    function frame() {
+      requestAnimationFrame(frame);
+      if (document.hidden || !visible || !base) return;
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(base, 0, 0, W, H);
+
+      for (var i = dyn.length - 1; i >= 0; i--) {
+        var L = dyn[i];
+        L.t = (L.t || 0) + 1;
+
+        if (L.state === 'settled') {
+          L.phase += 0.025;
+          drawLeafShape(ctx, L.x, L.y, L.size, L.rot + Math.sin(L.phase) * 0.1, L.color, 1, true);
+          continue;
+        }
+
+        var k = L.t / L.dur;
+
+        if (L.state === 'blow') {
+          L.x += L.dir * (2.4 + k * 5.2);
+          L.y = L.y0 - Math.sin(Math.PI * Math.min(k, 1)) * 48 + k * 10;
+          L.rot += L.spin;
+          var a = k < 0.8 ? 1 : Math.max(0, 1 - (k - 0.8) / 0.2);
+          drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, a, false);
+          if (k >= 1 || L.x < -90 || L.x > W + 90) dyn.splice(i, 1);
+        } else if (L.state === 'arrive') {
+          L.x = L.x0 + (L.tx - L.x0) * k;
+          L.y = L.y0 + (L.ty - L.y0) * k - Math.sin(Math.PI * k) * 34;
+          L.rot += L.spin;
+          drawLeafShape(ctx, L.x, L.y, L.size, L.rot, L.color, Math.min(1, k * 4), true);
+          if (k >= 1) {
+            L.state = 'settled';
+            L.x = L.tx;
+            L.y = L.ty;
+            L.rot = Math.random() * Math.PI * 2;
+            L.phase = Math.random() * Math.PI * 2;
+          }
+        }
+      }
+    }
+
+    function resize() {
+      W = Math.round(footer.clientWidth);
+      canvas.width = Math.max(1, Math.round(W * dpr));
+      canvas.height = Math.round(H * dpr);
+      canvas.style.width = '100%';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      rect = canvas.getBoundingClientRect();
+      buildBase();
+      reseed();
+    }
+
+    var rectTimer = null;
+    function refreshRect() {
+      if (rectTimer) return;
+      rectTimer = setTimeout(function () {
+        rectTimer = null;
+        rect = canvas.getBoundingClientRect();
+      }, 120);
+    }
+
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        visible = entries[0].isIntersecting;
+        if (visible && !base) buildBase();
+      }, { rootMargin: '200px 0px 200px 0px' }).observe(canvas);
+    } else {
+      visible = true;
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('scroll', refreshRect, { passive: true });
+
+    leafPile = {
+      hit: function (x, y) {
+        if (!visible || !rect || !base) return false;
+        if (rect.bottom < 0 || rect.top > window.innerHeight) return false;
+        var lx = x - rect.left;
+        if (lx < -20 || lx > W + 20) return false;
+        return y >= rect.top + surfaceY(lx, 2) - 4;
+      },
+      land: function (x, color, size) {
+        if (!rect) return;
+        var lx = x - rect.left;
+        dyn.push({
+          state: 'settled',
+          x: lx,
+          y: surfaceY(lx, 2) - 4,
+          rot: Math.random() * Math.PI * 2,
+          size: Math.min(18, (size || 12) * 0.85),
+          color: 'rgb(' + color + ')',
+          phase: Math.random() * Math.PI * 2
+        });
+        if (dyn.length > 90) {
+          for (var i = 0; i < dyn.length; i++) {
+            if (dyn[i].state === 'settled') {
+              dyn.splice(i, 1);
+              break;
+            }
+          }
+        }
+      }
+    };
+
+    if (!reduceMotion) {
+      gustTimer = setTimeout(gust, 2500);
+    }
+    requestAnimationFrame(frame);
   }
 
   function boot() {
@@ -414,7 +636,7 @@
     initScrollProgress();
     initScrollReveal();
     initRipple();
-    initLeafPile();
+    initLeafScene();
   }
 
   if (document.readyState === 'loading') {
