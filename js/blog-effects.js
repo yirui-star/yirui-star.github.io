@@ -814,24 +814,35 @@
     var cards = document.querySelectorAll('#aside-content .card-widget');
     if (!cards.length) return;
 
-    var PALETTE = ['#e2703a', '#f0a63c', '#c0392b', '#b06bff', '#4aa3a2', '#e88a4a', '#d97ba8'];
+    var PALETTE = ['#e2703a', '#f2a33c', '#c0392b', '#e85d75', '#e9b949'];
     var PRESETS = {
-      'card-info': ['ring', 'star', 'dot'],
-      'card-announcement': ['spark', 'dot', 'star'],
-      'card-recent-post': ['leaf', 'leaf', 'dot'],
-      'card-categories': ['square', 'dot', 'ring'],
-      'card-tags': ['dot', 'dot', 'dot', 'spark'],
-      'card-archives': ['square', 'dot', 'ring'],
-      'card-webinfo': ['dot', 'ring', 'dot'],
-      'card-toc': ['dot', 'spark']
+      'card-info': ['ring', 'star', 'leaf', 'dot', 'dot'],
+      'card-announcement': ['spark', 'spark', 'dot', 'dot', 'star'],
+      'card-recent-post': ['leaf', 'leaf', 'leaf', 'dot', 'dot'],
+      'card-categories': ['square', 'square', 'ring', 'dot', 'dot'],
+      'card-tags': ['dot', 'dot', 'dot', 'dot', 'dot', 'spark'],
+      'card-archives': ['square', 'ring', 'dot', 'dot'],
+      'card-webinfo': ['dot', 'ring', 'dot', 'square', 'dot'],
+      'card-toc': ['dot', 'spark', 'dot']
     };
-    var DEFAULT = ['leaf', 'dot'];
+    var DEFAULT = ['leaf', 'dot', 'dot'];
 
     function pick(card) {
       for (var k in PRESETS) {
         if (card.classList.contains(k) || card.id === k) return PRESETS[k];
       }
       return DEFAULT;
+    }
+
+    function place(span, corner, spread) {
+      var left;
+      var top;
+      if (corner === 0) { left = 4 + Math.random() * spread; top = 6 + Math.random() * spread; }
+      else if (corner === 1) { left = 96 - spread - Math.random() * spread; top = 6 + Math.random() * spread; }
+      else if (corner === 2) { left = 4 + Math.random() * spread; top = 94 - spread - Math.random() * spread; }
+      else { left = 96 - spread - Math.random() * spread; top = 94 - spread - Math.random() * spread; }
+      span.style.left = Math.max(2, Math.min(94, left)).toFixed(1) + '%';
+      span.style.top = Math.max(4, Math.min(92, top)).toFixed(1) + '%';
     }
 
     for (var i = 0; i < cards.length; i++) {
@@ -843,23 +854,24 @@
       layer.className = 'card-deco';
       layer.setAttribute('aria-hidden', 'true');
 
+      var mainCorner = i % 4;
+      var farCorner = (mainCorner + 2) % 4;
+
       for (var m = 0; m < motifs.length; m++) {
         var span = document.createElement('span');
         span.className = 'deco deco-' + motifs[m];
-        var corner = (m + i) % 4;
-        var left;
-        var top;
-        if (corner === 0) { left = 6 + Math.random() * 12; top = 8 + Math.random() * 12; }
-        else if (corner === 1) { left = 78 + Math.random() * 12; top = 10 + Math.random() * 14; }
-        else if (corner === 2) { left = 8 + Math.random() * 14; top = 74 + Math.random() * 14; }
-        else { left = 76 + Math.random() * 14; top = 72 + Math.random() * 16; }
-        span.style.left = left.toFixed(1) + '%';
-        span.style.top = top.toFixed(1) + '%';
+        var isSatellite = m === motifs.length - 1 && motifs.length > 3;
+        place(span, isSatellite ? farCorner : mainCorner, isSatellite ? 14 : 22);
+        if (isSatellite) {
+          span.style.left = 6 + Math.random() * 88 + '%';
+          span.style.top = 8 + Math.random() * 84 + '%';
+        }
         span.style.color = PALETTE[(Math.random() * PALETTE.length) | 0];
-        span.style.setProperty('--size', (6 + Math.random() * 9).toFixed(1) + 'px');
-        span.style.setProperty('--rot', ((Math.random() * 70 - 35) | 0) + 'deg');
+        var size = isSatellite ? 8 + Math.random() * 6 : 12 + Math.random() * 12;
+        span.style.setProperty('--size', size.toFixed(1) + 'px');
+        span.style.setProperty('--rot', ((Math.random() * 80 - 40) | 0) + 'deg');
         span.style.animationDelay = (-Math.random() * 8).toFixed(2) + 's';
-        span.style.animationDuration = (6 + Math.random() * 5).toFixed(1) + 's';
+        span.style.animationDuration = (5 + Math.random() * 4).toFixed(1) + 's';
         layer.appendChild(span);
       }
 
