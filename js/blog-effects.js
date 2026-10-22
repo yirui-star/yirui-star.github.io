@@ -809,6 +809,64 @@
     requestAnimationFrame(frame);
   }
 
+  /* ---------------- 侧栏卡片装饰 ---------------- */
+  function initAsideDecor() {
+    var cards = document.querySelectorAll('#aside-content .card-widget');
+    if (!cards.length) return;
+
+    var PALETTE = ['#e2703a', '#f0a63c', '#c0392b', '#b06bff', '#4aa3a2', '#e88a4a', '#d97ba8'];
+    var PRESETS = {
+      'card-info': ['ring', 'star', 'dot'],
+      'card-announcement': ['spark', 'dot', 'star'],
+      'card-recent-post': ['leaf', 'leaf', 'dot'],
+      'card-categories': ['square', 'dot', 'ring'],
+      'card-tags': ['dot', 'dot', 'dot', 'spark'],
+      'card-archives': ['square', 'dot', 'ring'],
+      'card-webinfo': ['dot', 'ring', 'dot'],
+      'card-toc': ['dot', 'spark']
+    };
+    var DEFAULT = ['leaf', 'dot'];
+
+    function pick(card) {
+      for (var k in PRESETS) {
+        if (card.classList.contains(k) || card.id === k) return PRESETS[k];
+      }
+      return DEFAULT;
+    }
+
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      if (card.querySelector('.card-deco')) continue;
+
+      var motifs = pick(card);
+      var layer = document.createElement('div');
+      layer.className = 'card-deco';
+      layer.setAttribute('aria-hidden', 'true');
+
+      for (var m = 0; m < motifs.length; m++) {
+        var span = document.createElement('span');
+        span.className = 'deco deco-' + motifs[m];
+        var corner = (m + i) % 4;
+        var left;
+        var top;
+        if (corner === 0) { left = 6 + Math.random() * 12; top = 8 + Math.random() * 12; }
+        else if (corner === 1) { left = 78 + Math.random() * 12; top = 10 + Math.random() * 14; }
+        else if (corner === 2) { left = 8 + Math.random() * 14; top = 74 + Math.random() * 14; }
+        else { left = 76 + Math.random() * 14; top = 72 + Math.random() * 16; }
+        span.style.left = left.toFixed(1) + '%';
+        span.style.top = top.toFixed(1) + '%';
+        span.style.color = PALETTE[(Math.random() * PALETTE.length) | 0];
+        span.style.setProperty('--size', (6 + Math.random() * 9).toFixed(1) + 'px');
+        span.style.setProperty('--rot', ((Math.random() * 70 - 35) | 0) + 'deg');
+        span.style.animationDelay = (-Math.random() * 8).toFixed(2) + 's';
+        span.style.animationDuration = (6 + Math.random() * 5).toFixed(1) + 's';
+        layer.appendChild(span);
+      }
+
+      card.appendChild(layer);
+    }
+  }
+
   function boot() {
     initPetals();
     initMeteors();
@@ -818,6 +876,7 @@
     initScrollMotion();
     initRipple();
     initLeafScene();
+    initAsideDecor();
   }
 
   if (document.readyState === 'loading') {

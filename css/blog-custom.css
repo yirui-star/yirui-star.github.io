@@ -587,21 +587,7 @@ html.reveal-ready .reveal-item.is-visible {
   animation: aside-blob 10s ease-in-out infinite alternate;
 }
 
-/* 角落小叶子 */
-#aside-content .card-widget::before {
-  content: "";
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  width: 22px;
-  height: 22px;
-  z-index: 0;
-  pointer-events: none;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2 Q 20 8 12 22 Q 4 8 12 2 Z' fill='%23e2703a' opacity='0.5'/></svg>")
-    center / contain no-repeat;
-  transform-origin: 50% 90%;
-  animation: aside-leaf 6.5s ease-in-out infinite;
-}
+/* 角落小叶子（由 JS 生成多枚装饰替代，这里保留光斑即可） */
 
 @keyframes aside-blob {
   from {
@@ -640,6 +626,83 @@ html.reveal-ready .reveal-item.is-visible {
 @media (prefers-reduced-motion: reduce) {
   #aside-content .card-widget::before,
   #aside-content .card-widget::after {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   侧栏卡片装饰层：每类卡片配不同的小图案
+   ============================================================ */
+#aside-content .card-widget > .card-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.card-deco {
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.deco {
+  position: absolute;
+  display: block;
+  width: var(--size, 10px);
+  height: var(--size, 10px);
+  opacity: 0.4;
+  transform: rotate(var(--rot, 0deg));
+  animation: deco-float 8s ease-in-out infinite;
+}
+
+.deco-dot {
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.deco-ring {
+  border-radius: 50%;
+  border: 2px solid currentColor;
+}
+
+.deco-square {
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.deco-leaf,
+.deco-star,
+.deco-spark {
+  background: currentColor;
+  -webkit-mask: var(--mask) center / contain no-repeat;
+  mask: var(--mask) center / contain no-repeat;
+}
+
+.deco-leaf {
+  --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2 Q 20 8 12 22 Q 4 8 12 2 Z'/></svg>");
+}
+
+.deco-star {
+  --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2 L14.4 9.6 L22 12 L14.4 14.4 L12 22 L9.6 14.4 L2 12 L9.6 9.6 Z'/></svg>");
+}
+
+.deco-spark {
+  --mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 1 L13 11 L23 12 L13 13 L12 23 L11 13 L1 12 L11 11 Z'/></svg>");
+}
+
+@keyframes deco-float {
+  0%,
+  100% {
+    transform: rotate(var(--rot, 0deg)) translateY(0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: rotate(calc(var(--rot, 0deg) + 10deg)) translateY(-4px) scale(1.08);
+    opacity: 0.62;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deco {
     animation: none;
   }
 }
